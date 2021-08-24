@@ -16,6 +16,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.block.Chest;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
 public final class Quarry extends JavaPlugin {
@@ -23,7 +24,7 @@ public final class Quarry extends JavaPlugin {
 
     Thread mine;
     quarryMap map=new quarryMap();
-
+    customMap custMap=new customMap();
 
     @Override
     public void onEnable() {
@@ -102,9 +103,56 @@ public final class Quarry extends JavaPlugin {
         recipe2.setIngredient('P',Material.DIAMOND_PICKAXE);
 
         Bukkit.addRecipe(recipe2);
+//------------------------------------------------------------------------
+        ItemStack custom= new ItemStack(Material.STICK,1);
+
+        ItemMeta meta4= custom.getItemMeta();
+
+        meta4.setDisplayName(ChatColor.RED +"custom marker");
+
+        custom.setItemMeta(meta4);
 
 
+
+        NamespacedKey key4=new NamespacedKey(this, "Custom");
+
+        ShapedRecipe recipe4=new ShapedRecipe(key4,custom);
+        recipe4.shape(
+                " P ",
+                " F ",
+                "   "
+        );
+        recipe4.setIngredient('F',Material.STICK);
+        recipe4.setIngredient('P',Material.STICK);
+
+        Bukkit.addRecipe(recipe4);
+
+//        ---------------------------------------------------------------------------
+        ItemStack customQuarry= new ItemStack(Material.FURNACE,1);
+
+        ItemMeta meta5= custom.getItemMeta();
+
+        meta5.setDisplayName(ChatColor.RED +"Custom Quarry");
+
+        customQuarry.setItemMeta(meta5);
+
+
+
+        NamespacedKey key5=new NamespacedKey(this, "Custom_Quarry");
+
+        ShapedRecipe recipe5=new ShapedRecipe(key5,customQuarry);
+        recipe5.shape(
+                "P P",
+                " F ",
+                "   "
+        );
+        recipe5.setIngredient('F',Material.FURNACE);
+        recipe5.setIngredient('P',Material.DIAMOND_PICKAXE);
+
+        Bukkit.addRecipe(recipe5);
+//        -------------------------------------------------------------
         map=map.readMap();
+        custMap=custMap.readMap();
         initializeRunningQuarrys();
     getServer().getPluginManager().registerEvents(new Miner(quarryThis),this);
 
@@ -122,6 +170,20 @@ public final class Quarry extends JavaPlugin {
 
         }
     }
+    mineCustom customMiner;
+    public void runCustom(Location quarryLoc){
+
+        this.customMiner=new mineCustom(this,quarryLoc);
+        Thread thread=new Thread(this.customMiner);
+        this.customMiner.setThread(thread);
+        thread.start();
+
+    }
+
+
+
+
+
 
     //makes thread for a miner
     mineChunk miner;
@@ -157,16 +219,46 @@ public final class Quarry extends JavaPlugin {
 //                    BlockState chestState = chestBlock.getState();
 
                         Chest chest = (Chest) chestLoc.getBlock().getState();
-                        //TODO add chest is full to sqitch to breaking naturall again
-
-                        //TODO---------------------------------------------------------
-//                    Inventory inv=chest.getInventory();
-                        Collection<ItemStack> drops = bloc.getDrops();
-                        for (ItemStack drop : drops) {
-                            chest.getInventory().addItem(drop);
-//                            map.map.get(quarryLocation).chest.customChest.addItem(drop);
+                        Inventory inventory=chest.getInventory();
+                        //------------------------------------------------
+                        //https://bukkit.org/threads/checking-if-a-chest-is-full.51617/
+//                        Credit to bergerkiller
+                        //-------------------------------------------------
+                        boolean hasEmptySlot = false;
+                        for (ItemStack stack : inventory.getContents()) {
+                            if (stack == null) {
+                                hasEmptySlot = true;
+                                break;
+                            }
                         }
-                        bloc.setType(Material.AIR);
+                        //method b: if it contains room for any sort of item
+                        int foundcount = 0;
+                        Collection<ItemStack> drops2 = bloc.getDrops();
+                        for (ItemStack drop3 : drops2) {
+                            ItemStack itemToAdd = drop3;
+                            foundcount = itemToAdd.getAmount();
+                            for (ItemStack stack : inventory.getContents()) {
+                                if (stack == null) foundcount -= itemToAdd.getMaxStackSize();
+                                else if(stack.getType() == itemToAdd.getType()) {
+                                    if (stack.getDurability() == itemToAdd.getDurability()) {
+                                        foundcount -= itemToAdd.getMaxStackSize() - stack.getAmount();
+                                    }
+                                }
+                            }
+                        }
+                        boolean canContainitem = foundcount <= 0;
+                        //-----------------------------------------------------------------------
+
+                        if(canContainitem||hasEmptySlot) {
+                            Collection<ItemStack> drops = bloc.getDrops();
+                            for (ItemStack drop : drops) {
+                                chest.getInventory().addItem(drop);
+//                            map.map.get(quarryLocation).chest.customChest.addItem(drop);
+                            }
+                            bloc.setType(Material.AIR);
+                        }else {
+                            bloc.breakNaturally();
+                        }
                     }
                 }
                 bloc.breakNaturally();
@@ -181,10 +273,27 @@ public final class Quarry extends JavaPlugin {
     public void onDisable() {
         // Plugin shutdown logic
         map.saveMap();
+        custMap.saveMap();
 
     }
 
 
+    public void changeBlock(int x, int y, int z) {
+        BukkitRunnable runner=new BukkitRunnable() {
+            @Override
+            public void run() {
+                Block bloc=Bukkit.getServer().getWorld("world").getBlockAt(x,y,z);
+//                Bukkit.getServer().getWorld("world").loadChunk(chunl);
 
+                        //TODO add chest is full to switch to breaking naturall again
 
+                        //TODO---------------------------------------------------------
+
+                bloc.breakNaturally();
+//                bloc.getWorld().unloadChunk(chunl);
+//                bloc.getWorld().loadChunk(chunl);
+            }
+        };runner.runTask(this);
+
+    }
 }

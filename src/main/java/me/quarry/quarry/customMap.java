@@ -1,6 +1,5 @@
 package me.quarry.quarry;
 
-import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
@@ -10,16 +9,11 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-public class quarryMap {
-
-    public quarryMap(){
-
-    }
-
+public class customMap {
     public void saveMap(){
         //for storing the locations;
-        File file = new File("plugins/hashMapLocations.txt");
-        File file2 = new File("plugins/hashMinerData.txt");
+        File file = new File("plugins/hashMapCustomLocations.txt");
+        File file2 = new File("plugins/hashCustomMinerData.txt");
         //for storing objects
         FileOutputStream f = null;
         FileOutputStream o = null;
@@ -31,11 +25,11 @@ public class quarryMap {
             bf = new BufferedWriter(new FileWriter(file));
             bo = new BufferedWriter(new FileWriter(file2));
             // iterate map entries
-            for (Map.Entry<Location, minerData> entry : map.entrySet()) {
+            for (Map.Entry<Location, customData> entry : map.entrySet()) {
 
                 // put key and value separated by a colon
                 bf.write(entry.getKey() + " ");
-                bo.write(entry.getValue().quarryLocation+":"+entry.getValue().getChunk().getX()+":"+entry.getValue().getChunk().getZ()+":"+ Arrays.toString(entry.getValue().getPos())+":"+entry.getValue().chestLocation+":"+entry.getValue().isRunning());
+                bo.write(entry.getValue().quarryLocation+":"+ Arrays.toString(entry.getValue().getPos())+":"+entry.getValue().chestLocation+":"+entry.getValue().isRunning());
                 // new line
                 bf.newLine();
                 bo.newLine();
@@ -73,15 +67,15 @@ public class quarryMap {
     }
 
     Location quarryLocation;
-    Chunk chunk;
+
     int quarryId;
     int[]minerId=new int[100];
 //    public Location getLinkedChest() {
 ////        return LinkedChest;
 //    }
 
-//    Location LinkedChest;
-    HashMap<Location,minerData> map=new HashMap<Location, minerData>();
+    //    Location LinkedChest;
+    HashMap<Location,customData> map=new HashMap<Location, customData>();
 
     public Location getQuarryLocation() {
         return quarryLocation;
@@ -90,19 +84,19 @@ public class quarryMap {
     public void setQuarryLocation(Location quarryLocation) {
         this.quarryLocation = quarryLocation;
     }
-    public minerData getMinerData(Location location){
-        minerData mine=map.get(location);
+    public customData getCustomData(Location location){
+        customData mine=map.get(location);
         return mine;
     }
 
-    public quarryMap readMap() {
-        quarryMap q=new quarryMap();
+    public customMap readMap() {
+        customMap q=new customMap();
         BufferedReader br = null;
         BufferedReader bf = null;
 
         // create file object
-        File file = new File("plugins/hashMapLocations.txt");
-        File file2 = new File("plugins/hashMinerData.txt");
+        File file = new File("plugins/hashMapCustomLocations.txt");
+        File file2 = new File("plugins/hashCustomMinerData.txt");
         try {
 
             // create BufferedReader object from the File
@@ -125,7 +119,7 @@ public class quarryMap {
                 String[] z=partstwo[3].split("=");
 
 //                Location loc=null;
-                Location loc=Bukkit.getServer().getWorld("world").getBlockAt((int)Double.parseDouble(x[1]),(int)Double.parseDouble(y[1]),(int)Double.parseDouble(z[1])).getLocation();
+                Location loc= Bukkit.getServer().getWorld("world").getBlockAt((int)Double.parseDouble(x[1]),(int)Double.parseDouble(y[1]),(int)Double.parseDouble(z[1])).getLocation();
 //                loc.setX(Double.parseDouble(x[1]));
 //                loc.setY(Double.parseDouble(y[1]));
 //                loc.setZ(Double.parseDouble(z[1]));
@@ -133,15 +127,14 @@ public class quarryMap {
 
 
 
-                minerData miner=new minerData();
+                customData miner=new customData();
                 String minerData = bf.readLine();
                 String[] partsminer = minerData.split(":");
-                int chunkx=Integer.parseInt(partsminer[1]);
-                int chunkz=Integer.parseInt(partsminer[2]);
 
-                miner.setChunk(Bukkit.getServer().getWorld("world").getChunkAt(chunkx,chunkz));
 
-                String minerLoaction=partsminer[3];
+
+
+                String minerLoaction=partsminer[0];
                 minerLoaction=minerLoaction.replace("[","");
                 minerLoaction=minerLoaction.replace("]","");
                 String[] xyz=minerLoaction.split(",");
@@ -157,7 +150,7 @@ public class quarryMap {
 //                minerLoc.setZ(Double.parseDouble(z2[1]));
 
 //                4 chestlocation 5 running
-                String chestLoaction=partsminer[4];
+                String chestLoaction=partsminer[1];
                 if(!chestLoaction.equals("null")) {
                     String[] chestxyz = chestLoaction.split(",");
                     String[] chestx = chestxyz[1].split("=");
@@ -167,34 +160,33 @@ public class quarryMap {
                     miner.setChestLocation(chest);
                 }
 
-                miner.setRunning(Boolean.parseBoolean(partsminer[5]));
+                miner.setRunning(Boolean.parseBoolean(partsminer[3]));
                 miner.setQuarryLocation(loc);
-                miner.setChunk(loc.getChunk());
-                miner.setPos(Integer.parseInt(xyz[0].trim()),Integer.parseInt(xyz[1].trim()),Integer.parseInt(xyz[2].trim()));
+//                miner.setPos(Integer.parseInt(xyz[0].trim()),Integer.parseInt(xyz[1].trim()),Integer.parseInt(xyz[2].trim()));
                 // put name, number in HashMap if they are
                 // not empty
                 if (loc!=null) {
                     q.map.put(loc, miner);
                 }
             }
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-            finally {
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        finally {
 
-                // Always close the BufferedReader
-                if (br != null) {
-                    try {
-                        br.close();
-                    }
-                    catch (Exception e) {
-                    };
+            // Always close the BufferedReader
+            if (br != null) {
+                try {
+                    br.close();
                 }
+                catch (Exception e) {
+                };
             }
+        }
 
 
-            // create BufferedReader object from the File
+        // create BufferedReader object from the File
 
 
         return q;

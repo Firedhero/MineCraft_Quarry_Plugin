@@ -68,37 +68,9 @@ public class mineChunk extends Thread {
     //                            e.printStackTrace();
                                 }
                             }
-
-    //                    if(quarryLocation==null){
-    //                        Bukkit.broadcastMessage("Quarry broke digging stopped");
-    ////                        Bukkit.broadcastMessage(quarryLocation.getWorld().getBlockAt(quarryLocation.getBlockX(),quarryLocation.getBlockY(),quarryLocation.getBlockZ()).getMetadata(ChatColor.RED+"Quarry").toString());
-    //                        y=0;x=16;z=16;
-    //                        continue;
-    //                    }
                             Chunk chunk = breakChunk.getWorld().getChunkAt(quarryLocation);
                             quarry.changeBlock(chunk, x, y, z,quarryLocation);
                             quarry.map.map.get(quarryLocation).setPos(x,y,z);
-//                            Bukkit.broadcastMessage("Mining x:"+x+" y:"+y+" z:"+z);
-    //                        world.unloadChunk(chunk);
-    //                        world.loadChunk(chunk);
-    //                    block=chunk.getBlock(x,y,z);
-    //                    block.setType(Material.AIR);
-    //                    broken.breakNaturally();
-    //                    changeBlock(chunk,x,y,z)
-    //                    chunk.getBlock(x,y,z).setType(Material.AIR);
-
-    //                    quarry.getServer().getWorld(breakChunk.getWorld().getName()).getChunkAt(quarryLocation).getBlock(x,y,z).setType(Material.AIR);//.setType(Material.AIR);
-
-    //                    quarry.getServer().getScheduler().callSyncMethod(this,  );
-
-
-    //        bloc.getDrops().clear();
-    //                    Bukkit.broadcastMessage(Thread.currentThread().toString());
-    ////                    Bukkit.broadcastMessage("Updating block");
-
-
-    //                    broken.setType(Material.AIR);
-    //                    player.sendMessage("breaking block");
                             try {
                                 sleep(100);
                             } catch (InterruptedException e) {
@@ -110,12 +82,10 @@ public class mineChunk extends Thread {
                     }
 //                    Bukkit.broadcastMessage("Finished Z");
                 }
-                z=0;
-//                Bukkit.broadcastMessage("Finished X");
-//                    quarry.getServer().getWorld(breakChunk.getWorld().getName()).getChunkAt(quarryLocation).load();
+                z=0;//to reset the z to zero in chunk
 
                 }
-            x=0;
+            x=0;//to reset the x in chunk
 //            Bukkit.broadcastMessage("Finished Y");
 
         }
@@ -140,9 +110,6 @@ public class mineChunk extends Thread {
         quarryLocation=quarryLoc;
         breakChunk=breakChun;
         quarry=q;
-//        run2();
-//        Thread thread=new Thread(new mineChunk(quarryLocation,breakChunk,player,snap,1,q));
-//        thread.start();
     }
     mineChunk(){
 

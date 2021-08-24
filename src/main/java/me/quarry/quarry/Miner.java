@@ -14,21 +14,20 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import sun.jvm.hotspot.oops.Metadata;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.jar.JarEntry;
 
 public class Miner implements Listener {
     private Location player;
     private  Player user;
     private Location quarryLocation;
+    private Location customLocation;
     private Quarry quarryThis;
     private Chunk breakChunk;
     private ChunkSnapshot snap;
     private int id;
     minerData quarry;
+    customData customQuarry;
 
     public Miner(Quarry quarry) {
         quarryThis=quarry;
@@ -111,6 +110,15 @@ public class Miner implements Listener {
             quarryThis.map.map.put(quarryLocation,quarry);
 
         }
+
+        if(meta.getItemMeta().getDisplayName().equals(ChatColor.RED+"Custom Quarry")){
+            customLocation=event.getBlock().getLocation();
+            customQuarry=new customData();
+            customQuarry.setQuarryLocation(customLocation);
+            quarryThis.custMap.map.put(customLocation,customQuarry);
+        }
+
+
     }
     @EventHandler
     public void exploded(BlockExplodeEvent event){
@@ -148,22 +156,6 @@ public class Miner implements Listener {
                 quarryThis.runMiner(miner.quarryLocation,miner.chunk,user,miner.Id);
 //                mineChun();
             }
-
-
-
-//            if(quarryThis.miner!=null){
-////                if(quarryThis.miner.isRunning()) {
-////                    user.sendMessage("You stopped a Quarry");
-////                    quarryThis.updateMinerStatus(false);
-////                }
-////                else {
-////                    user.sendMessage("You restarted a Quarry now running");
-////                    quarryThis.updateMinerStatus(true);
-////                }
-//            }else {
-////                user.sendMessage("You clicked a Quarry now running");
-//                mineChun();
-//            }
             //TODO-END--------------------------------------
         }
 
@@ -179,7 +171,42 @@ public class Miner implements Listener {
             Location markedQuarry=event.getClickedBlock().getLocation();
             quarryThis.map.map.get(event.getClickedBlock().getLocation()).chestLocation=markedChest;
         }
+
+
+        if(itemName.equals(ChatColor.RED+"custom marker")&&event.getAction().equals(Action.RIGHT_CLICK_BLOCK)&&!event.getClickedBlock().getType().equals(Material.FURNACE)){
+            user.sendMessage("you have marked spot for custom quarry Click Custom Quarry to start"+event.getClickedBlock().getLocation());
+            spots.put(event.getClickedBlock().getLocation(),event.getClickedBlock().getLocation());
+            int x=event.getClickedBlock().getLocation().getBlockX();
+            int y=event.getClickedBlock().getLocation().getBlockY();
+            int z=event.getClickedBlock().getLocation().getBlockZ();
+            Bukkit.getServer().getWorld("world").getBlockAt(x,y+1,z).setType(Material.OAK_FENCE);
+
+        }
+        if(itemName.equals(ChatColor.RED+"custom marker")&&event.getAction().equals(Action.RIGHT_CLICK_BLOCK)&&event.getClickedBlock().getType().equals(Material.FURNACE)){
+            event.setCancelled(true);//cancels furnace menu
+            customData custMiner = quarryThis.custMap.map.get(event.getClickedBlock().getLocation());
+            if(custMiner.isRunning) {
+                user.sendMessage("You stopped a Quarry");
+                custMiner.setRunning(false);
+                quarryThis.custMap.map.put(event.getClickedBlock().getLocation(), custMiner);
+            }else{
+                if (!spots.isEmpty()) {
+                    custMiner.setRunning(true);
+                    custMiner.setMarkedSpots(spots);
+                    quarryThis.custMap.map.put(event.getClickedBlock().getLocation(), custMiner);
+                    quarryThis.runCustom(event.getClickedBlock().getLocation());
+                    spots = new HashMap<>();
+                }else{
+                    user.sendMessage("You need to mark spots for the quarry to run");
+                }
+
+
+            }
+        }
+
     }
+    HashMap<Location,Location>spots=new HashMap<>();
+
     Location markedChest = null;
 
     public void mine(int x,int y,int z,int bottom){

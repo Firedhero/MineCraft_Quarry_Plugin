@@ -1,13 +1,23 @@
 package me.quarry.quarry;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.ChunkSnapshot;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class mineCustom extends Thread{
 
+
+    public mineCustom(Quarry quarry,Location quarryLoc) {
+        quarryLocation=quarryLoc;
+        markedSpots=quarry.custMap.map.get(quarryLocation).markedSpots;
+        this.quarry=quarry;
+    }
 
     public Location getQuarryLocation() {
         return quarryLocation;
@@ -25,7 +35,7 @@ public class mineCustom extends Thread{
 
     public void setRunning(boolean running) {
         isRunning = running;
-        if(running==true) {
+        if(running) {
             thread.interrupt();
         }
     }
@@ -35,26 +45,60 @@ public class mineCustom extends Thread{
     }
 
     private boolean isRunning;
+    HashMap<Location,Location> markedSpots;
+
+
     public void run() {
         isRunning=true;
+//        need to find the positions to be mined the Z will be fixed with the initial marked Location
 
-//        BlockData broken;
         Block block;
-        int[]leftOff=quarry.map.map.get(quarryLocation).getPos();
-        int x,y,z;
-        x=leftOff[0];
-        y=leftOff[1];
-        z=leftOff[2];
+//        int[]leftOff=quarry.map.map.get(quarryLocation).getPos();
+        int minX=Integer.MAX_VALUE;
+        int maxX=Integer.MIN_VALUE;
+        int y = 1;
+        int maxZ=Integer.MIN_VALUE;
+        int minZ=Integer.MAX_VALUE;
+
+//        x=leftOff[0];
+//        y=leftOff[1];
+//        z=leftOff[2];
+        //find smallest x in locations;
+        for(Map.Entry<Location, Location> map:markedSpots.entrySet()){
+            //TODO remove after finding way to get initial marked Y
+            y=(int)map.getValue().getY();
+
+            if(map.getValue().getBlock().getLocation().getBlockX()<minX){
+                minX=(int)map.getValue().getX();
+            }
+
+            if(map.getValue().getBlock().getLocation().getBlockX()>maxX){
+                maxX=(int)map.getValue().getX();
+            }
+
+            if(map.getValue().getBlock().getLocation().getBlockZ()<minZ){
+                minZ=(int)map.getValue().getZ();
+            }
+
+            if(map.getValue().getBlock().getLocation().getBlockZ()>maxZ){
+                maxZ=(int)map.getValue().getZ();
+            }
+
+        }
+
 
         //take highest y from list
         for (; y > 1; y--) {//no change
-            for (; x < 16; x++) {//need to get the marked world positions
-                for (; z < 16; z++) {
+            for (int x=minX;x < maxX; x++) {//need to get the marked world positions
+                for (int z=minZ; z < maxZ; z++) {
+//                    Bukkit.broadcastMessage("X:"+x);
+//                    Bukkit.broadcastMessage("Z:"+z);
+//                    Bukkit.broadcastMessage("----------------");
                     try {
 
 
-                        if (quarry.map.map.get(quarryLocation) != null) {
-                            while (!quarry.map.map.get(quarryLocation).isRunning) {
+                        if (quarry.custMap.map.get(quarryLocation) != null) {
+                            while (!quarry.custMap.map.get(quarryLocation).isRunning) {
                                 try {
 
                                     sleep(500);
@@ -63,57 +107,32 @@ public class mineCustom extends Thread{
                                 }
                             }
 
-                            //                    if(quarryLocation==null){
-                            //                        Bukkit.broadcastMessage("Quarry broke digging stopped");
-                            ////                        Bukkit.broadcastMessage(quarryLocation.getWorld().getBlockAt(quarryLocation.getBlockX(),quarryLocation.getBlockY(),quarryLocation.getBlockZ()).getMetadata(ChatColor.RED+"Quarry").toString());
-                            //                        y=0;x=16;z=16;
-                            //                        continue;
-                            //                    }
-                            Chunk chunk = breakChunk.getWorld().getChunkAt(quarryLocation);
-                            quarry.changeBlock(chunk, x, y, z,quarryLocation);
-                            quarry.map.map.get(quarryLocation).setPos(x,y,z);
-//                            Bukkit.broadcastMessage("Mining x:"+x+" y:"+y+" z:"+z);
-                            //                        world.unloadChunk(chunk);
-                            //                        world.loadChunk(chunk);
-                            //                    block=chunk.getBlock(x,y,z);
-                            //                    block.setType(Material.AIR);
-                            //                    broken.breakNaturally();
-                            //                    changeBlock(chunk,x,y,z)
-                            //                    chunk.getBlock(x,y,z).setType(Material.AIR);
-
-                            //                    quarry.getServer().getWorld(breakChunk.getWorld().getName()).getChunkAt(quarryLocation).getBlock(x,y,z).setType(Material.AIR);//.setType(Material.AIR);
-
-                            //                    quarry.getServer().getScheduler().callSyncMethod(this,  );
-
-
-                            //        bloc.getDrops().clear();
-                            //                    Bukkit.broadcastMessage(Thread.currentThread().toString());
-                            ////                    Bukkit.broadcastMessage("Updating block");
-
-
-                            //                    broken.setType(Material.AIR);
-                            //                    player.sendMessage("breaking block");
+//
+                            quarry.changeBlock(x, y, z);
                             try {
-                                sleep(100);
+
+                                sleep(50);
                             } catch (InterruptedException e) {
                                 //                            e.printStackTrace();
                             }
+//                            quarry.map.map.get(quarryLocation).setPos(x,y,z);
+
                         }
                     }catch (Exception e){
 
                     }
 //                    Bukkit.broadcastMessage("Finished Z");
                 }
-                z=0;
+//                z=0;
 //                Bukkit.broadcastMessage("Finished X");
 //                    quarry.getServer().getWorld(breakChunk.getWorld().getName()).getChunkAt(quarryLocation).load();
 
             }
-            x=0;
+//            x=0;
 //            Bukkit.broadcastMessage("Finished Y");
 
         }
-        quarry.map.map.get(quarryLocation).isRunning=false;
+//        quarry.map.map.get(quarryLocation).isRunning=false;
     }
 
 
@@ -122,26 +141,7 @@ public class mineCustom extends Thread{
 
 
 
-    mineCustom(Location quarryLoc, Chunk breakChun, Quarry q, int id){
 
-        quarryLocation=quarryLoc;
-        breakChunk=breakChun;
-        quarry=q;
-    }
-    int id;
-    mineCustom(Location quarryLoc, Chunk breakChun, Player user, Quarry q, int id){
-
-        player=user;
-        quarryLocation=quarryLoc;
-        breakChunk=breakChun;
-        quarry=q;
-//        run2();
-//        Thread thread=new Thread(new mineChunk(quarryLocation,breakChunk,player,snap,1,q));
-//        thread.start();
-    }
-    mineCustom(){
-
-    }
 
     public void setThread(Thread thread) {
         this.thread=thread;

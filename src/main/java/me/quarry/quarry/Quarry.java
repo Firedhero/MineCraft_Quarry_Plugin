@@ -77,7 +77,7 @@ public final class Quarry extends JavaPlugin {
                 "   "
         );
         recipe3.setIngredient('F',Material.STICK);
-        recipe3.setIngredient('P',Material.DIAMOND_BLOCK);
+        recipe3.setIngredient('P',Material.OBSIDIAN);
 
         Bukkit.addRecipe(recipe3);
         //testing for new quarry
